@@ -1,0 +1,54 @@
+%!
+% This is a sample prefix file for creating a PDF/A document.
+%
+% Ripped from Ghostscript 9.22's documentation.
+% https://www.ghostscript.com/doc/lib/PDFA_def.ps
+%
+% Stripped and customized.
+
+[
+<%= if @title do %>
+  /Title (<%= @title %>)
+<% end %>
+<%= if @author do %>
+  /Author (<%= @author %>)
+<% end %>
+<%= if @subject do %>
+  /Subject (<%= @subject %>)
+<% end %>
+<%= if @keywords do %>
+  /Keywords (<%= @keywords %>)
+<% end %>
+<%= if @creator do %>
+  /Creator (<%= @creator %>)
+<% end %>
+<%= if @creation_date do %>
+  /CreationDate (<%= @creation_date %>)
+<% end %>
+<%= if @mod_date do %>
+  /ModDate (<%= @mod_date %>)
+<% end %>
+<%= if @trapped do %>
+  /Trapped <%= @trapped %>
+<% end %>
+
+  /DOCINFO pdfmark
+
+/ICCProfile (<%= @eci_icc %>)
+
+def
+[/_objdef {icc_PDFA} /type /stream /OBJ pdfmark
+
+[{icc_PDFA} << /N 3 >> /PUT pdfmark
+[{icc_PDFA} ICCProfile (r) file /PUT pdfmark
+
+[/_objdef {OutputIntent_PDFA} /type /dict /OBJ pdfmark
+[{OutputIntent_PDFA} <<
+  /Type /OutputIntent               % Must be so (the standard requires).
+  /S /GTS_PDFA1                     % Must be so (the standard requires).
+  /DestOutputProfile {icc_PDFA}     % Must be so (see above).
+  /OutputConditionIdentifier (sRGB) % Customize
+>> /PUT pdfmark
+[{Catalog} <</OutputIntents [ {OutputIntent_PDFA} ]>> /PUT pdfmark
+
+<%= @pdfa_def_ext %>
