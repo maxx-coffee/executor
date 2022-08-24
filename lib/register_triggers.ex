@@ -21,7 +21,7 @@ defmodule Executor.RegisterTriggers do
 
   @impl true
   def init(subscriptions) do
-    Process.send_after(self(), :register_triggers, 500)
+    Process.send_after(self(), :register_triggers, 1500)
     {:ok, []}
   end
 
@@ -31,7 +31,11 @@ defmodule Executor.RegisterTriggers do
   defp add_subscriptions([child | children]) do
     triggers = apply(child, :triggers, [])
 
-    TriggerServer.start_link({child, triggers})
+    if triggers |> length() > 0 do
+      TriggerServer.start_link({child, triggers})
+    end
+
+    add_subscriptions(children)
   end
 
   def handle_info(:register_triggers, state) do

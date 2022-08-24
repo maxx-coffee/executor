@@ -73,17 +73,19 @@ defmodule Executor.Workflow do
     end
   end
 
-  defmacro call(name, do: block) do
-    Module.put_attribute(__CALLER__.module, :steps, name |> String.to_atom())
+  defmacro step(name, do: block) do
+    Module.put_attribute(__CALLER__.module, :steps, "step_#{name}" |> String.to_atom())
 
     quote do
-      def unquote(name |> String.to_existing_atom())(step_manager) do
+      def unquote("step_#{name}" |> String.to_existing_atom())(step_manager) do
         {:ok, pid} = BlockSupervisor.add_child()
         %{trigger_message: trigger_message} = StepsManager.get_state(step_manager)
         var!(block_server) = pid
         var!(trigger_message) = trigger_message
+        var!(step_manager) = step_manager
         _block_server = var!(block_server)
         _trigger_message = var!(trigger_message)
+        _step_manager = var!(step_manager)
         unquote(block)
         BlockManager.finish_step(pid, {step_manager, __MODULE__})
       end
@@ -118,10 +120,18 @@ defmodule Executor.Workflow do
     end
   end
 
-  defmacro inport(inport) do
+  defmacro get_inport() do
+    quote do
+      step_manager = var!(step_manager)
+      %{previous: previous} = StepsManager.get_state(step_manager)
+      previous[:outport]
+    end
+  end
+
+  defmacro outport(outport) do
     quote do
       block_server = var!(block_server)
-      BlockManager.set(block_server, :inport, unquote(inport))
+      BlockManager.set(block_server, :outport, unquote(outport))
     end
   end
 

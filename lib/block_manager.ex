@@ -32,7 +32,7 @@ defmodule Executor.BlockManager do
   end
 
   def finish_step(pid, {step_manager, module}) do
-    GenServer.call(pid, {:finish_step, step_manager, module})
+    GenServer.call(pid, {:finish_step, step_manager, module}, :infinity)
   end
 
   @impl true
@@ -67,19 +67,23 @@ defmodule Executor.BlockManager do
       )
       when not is_nil(error) do
     update_steps(state)
-    apply(module, error |> String.to_existing_atom(), [step_manager])
+    apply(module, "step_#{error}" |> String.to_atom(), [step_manager])
 
     Process.send_after(self(), :shutdown, 1)
     {:reply, state, state}
   end
 
   def run_next(next, resp) when is_function(next) do
-    next.(resp)
+    IO.inspect("step_#{next.(resp)}")
+
+    "step_#{next.(resp)}"
     |> String.to_existing_atom()
   end
 
   def run_next(next, _resp) do
-    next
+    IO.inspect("step_#{next}")
+
+    "step_#{next}"
     |> String.to_existing_atom()
   end
 
